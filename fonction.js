@@ -14,9 +14,10 @@ function register(message, server) {
     let pseudo = string[0]
     let persoId = message.member.id
     let idserver = message.guild.id
+    console.log(persoId, idserver, pseudo, serveur)
     server.query("SELECT count(*) as NB FROM utilisateurs where ID_PERSO = '" + persoId + "';", (error, results, fields) => {
         if (results[0].NB === 0) {
-            server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, isMain, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "','" + idserver + "',true);")
+            server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, isMain, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "',true,'" + idserver + "');")
             message.guild.members
                 .get(message.member.id)
                 .setNickname(pseudo + "-" + serveur)
@@ -40,8 +41,16 @@ function aide(message) {
     message.delete(1000)
 }
 
-function lvl(member, server, clientbnet) {}
+function lvl(message, server, clientbnet) {}
 
-function gear(member, server, clientbnet) {}
+function gear(message, server, clientbnet) {
+    var fields = ["items", "progression"]
+    console.log(Object.keys(clientbnet))
+    clientbnet.warcraft.getCharacter(message.content.split(" ")[1].split("-")[1], message.content.split(" ")[1].split("-")[0], fields, (error, response) => {
+        if (error) {
+            console.log(error)
+        }
+    })
+}
 
 module.exports = { welcomeNew, register, aide, lvl, gear, deleteUser }
