@@ -6,24 +6,19 @@ const Fonction = require("./fonction")
 var Mysql = require("mysql")
 server = new Mysql.createConnection(config.connectServ)
 var blizzardclient = require("battlenet.js")
-module.exports = { server }
 var cregion = "eu"
 var clocale = "fr_FR"
 
-//console.log(
-client.guilds.forEach(guild => {
-    console.log(guild)
-    server.query("SELECT * from server where ID_SERVER = " + guild.id + ";", (error, results, fields) => {
-        console.log(results)
-        if (results === null || "") {
-            server.query("INSERT INTO server (ID_SERVER) values ('" + guild.id + "')")
-        }
+client.on("ready", () =>
+    client.guilds.forEach(guild => {
+        server.query("SELECT * from server where ID_SERVER = '" + guild.id + "';", (error, results, fields) => {
+            if (results.length === 0) {
+                server.query("INSERT INTO server (ID_SERVER) values ('" + guild.id + "')")
+            }
+        })
     })
-})
-//)
-
+)
 var clientbnet = new blizzardclient(config.APIKey, { region: cregion, locale: clocale })
-console.log(clientbnet)
 
 client.on("guildMemberAdd", member => {
     Fonction.welcomeNew(member, server, clientbnet)
