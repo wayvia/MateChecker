@@ -10,31 +10,34 @@ function deleteUser(member, server) {
     server.query("DELETE FROM utilisateurs WHERE ID_PERSO = '" + member.id + "';")
 }
 
-function register(message, server, bnet) {
+async function register(message, server, bnet) {
     let string = message.content.split(" ")[1].split("-")
     let serveur = string[1]
     let pseudo = string[0]
     let persoId = message.member.id
     let idserver = message.guild.id
-    //const data = await axios.get("https://eu.api.blizzard.com/wow/character/" + serveur + "/" + pseudo + "?locale=fr_FR&access_token=" + await bnet.getAccessToken())
-    console.log(data)
-    console.log(persoId, idserver, pseudo, serveur)
-    server.query("SELECT count(*) as NB FROM utilisateurs where ID_PERSO = '" + persoId + "';", (error, results, fields) => {
-        if (results[0].NB === 0) {
-            server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, isMain, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "',true,'" + idserver + "');")
-            message.guild.members
-                .get(message.member.id)
-                .setNickname(pseudo + "-" + serveur)
-                .then(() => {
-                    message.channel.send(message.member + " Enregistré !")
-                })
-                .catch(() => {
-                    message.channel.send("Il y a eu une erreur !")
-                })
-        } else {
-            server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "','" + idserver + "');")
-        }
-    })
+    try {
+        const uri = await axios.get("https://eu.api.blizzard.com/wow/character/" + serveur + "/" + pseudo + "?locale=fr_FR&access_token=" + (await bnet.getAccessToken()))
+        console.log(uri)
+        server.query("SELECT count(*) as NB FROM utilisateurs where ID_PERSO = '" + persoId + "';", (error, results, fields) => {
+            if (results[0].NB === 0) {
+                server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, isMain, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "',true,'" + idserver + "');")
+                message.guild.members
+                    .get(message.member.id)
+                    .setNickname(pseudo + "-" + serveur)
+                    .then(() => {
+                        message.channel.send(message.member + " Enregistré !")
+                    })
+                    .catch(() => {
+                        message.channel.send("J'ai pas les droits pour changer les pseudos des admins, mais tu es quand même rentrer dans la base de données ;) !")
+                    })
+            } else {
+                server.query("INSERT INTO utilisateurs (PSEUDO, SERVEUR, ID_PERSO, ID_SERVER) VALUES ('" + pseudo + "','" + serveur + "','" + persoId + "','" + idserver + "');")
+            }
+        })
+    } catch (error) {
+        message.channel.send("Ce personnage n'existe pas !")
+    }
     message.delete(1000)
 }
 
@@ -69,13 +72,13 @@ function roster(message, serveur, bnet) {
             var selspe = spe.spec.role
             switch (selspe) {
                 case "HEALING":
-                    heal.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"])
+                    heal.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"] + " niveau : " + data.data.level)
                     break
                 case "TANK":
-                    tank.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"])
+                    tank.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"] + " niveau : " + data.data.level)
                     break
                 case "DPS":
-                    dps.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"])
+                    dps.push(pseudo["PSEUDO"] + "-" + pseudo["SERVEUR"] + " niveau : " + data.data.level)
                     break
             }
         }

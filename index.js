@@ -10,8 +10,8 @@ var bnet
 
 client.on("ready", () => {
     client.guilds.forEach(guild => {
-        server.query("SELECT * from server where ID_SERVER = '" + guild.id + "';", (error, results, fields) => {
-            if (results.length === 0) {
+        server.query("SELECT * from server where ID_SERVER = '" + guild.id + "';", (error, result, fields) => {
+            if (result.length === 0) {
                 server.query("INSERT INTO server (ID_SERVER) values ('" + guild.id + "')")
             }
         })
