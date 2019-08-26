@@ -5,11 +5,10 @@ client.login(config.token)
 const Fonction = require("./fonction")
 var Mysql = require("mysql")
 server = new Mysql.createConnection(config.connectServ)
-var blizzardclient = require("battlenet.js")
-var cregion = "eu"
-var clocale = "fr_FR"
+var blizzardclient = require("blizzapi")
+var bnet
 
-client.on("ready", () =>
+client.on("ready", () => {
     client.guilds.forEach(guild => {
         server.query("SELECT * from server where ID_SERVER = '" + guild.id + "';", (error, results, fields) => {
             if (results.length === 0) {
@@ -17,11 +16,13 @@ client.on("ready", () =>
             }
         })
     })
-)
-var clientbnet = new blizzardclient(config.APIKey, { region: cregion, locale: clocale })
+    bnet = new blizzardclient(config.bnetconnect)
+})
+
+//const data = await clientbnet.query("/path/to/endpoint")
 
 client.on("guildMemberAdd", member => {
-    Fonction.welcomeNew(member, server, clientbnet)
+    Fonction.welcomeNew(member)
 })
 
 client.on("guildMemberRemove", member => {
@@ -30,14 +31,25 @@ client.on("guildMemberRemove", member => {
 
 client.on("message", message => {
     if (message.content.startsWith("!")) {
-        if (message.content.toLowerCase().startsWith("!aide")) {
-            Fonction.aide(message)
-        } else if (message.content.toLowerCase().startsWith("!register")) {
-            Fonction.register(message, server)
-        } else if (message.content.toLowerCase().startsWith("!lvl")) {
-            Fonction.lvl(message, clientbnet, server)
-        } else if (message.content.toLowerCase().startsWith("!gear")) {
-            Fonction.gear(message, clientbnet, server)
-        } else message.channel.send("Je ne parviens à trouver cette commande ! Vérifie l'orthographe ou tape !aide pour avoir toute les commandes.")
+        var abrmess = message.content.toLowerCase()
+        switch (true) {
+            case abrmess.startsWith("!aide"):
+                Fonction.aide(message)
+                break
+            case abrmess.startsWith("!register"):
+                Fonction.register(message, server, bnet)
+                break
+            case abrmess.startsWith("!lvl"):
+                Fonction.lvl(message, server, bnet)
+                break
+            case abrmess.startsWith("!gear"):
+                Fonction.gear(message, server, bnet)
+                break
+            case abrmess.startsWith("!roster"):
+                Fonction.roster(message, server, bnet)
+                break
+            default:
+                message.channel.send("Je ne parviens à trouver cette commande ! Vérifie l'orthographe ou tape !aide pour avoir toute les commandes.")
+        }
     }
 })
